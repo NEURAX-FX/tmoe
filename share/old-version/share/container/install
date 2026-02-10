@@ -946,7 +946,7 @@ cat >${PREFIX}/bin/startxsdl <<-ENDOFXSDL
 	fi
 ENDOFXSDL
 ################
-#aria2c --console-log-level=warn --no-conf --allow-overwrite=true -d ${PREFIX}/bin -o debian-i 'https://raw.githubusercontent.com/2moe/tmoe/master/share/old-version/share/app/manager'
+#aria2c --console-log-level=warn --no-conf --allow-overwrite=true -d ${PREFIX}/bin -o debian-i 'https://gitee.com/mo2/linux/raw/master/share/old-version/share/app/manager'
 #############
 printf '%s\n' 'Giving startup script execution permission'
 printf "%s\n" "正在赋予启动脚本执行权限"
@@ -968,6 +968,20 @@ ls -lh "${ROOTFS_DIR}/${TMOE_ROOTFS_TAR_XZ}"
 if [ ! -d "${DEBIAN_CHROOT}/usr/local/bin" ]; then
 	${TMOE_CHROOT_PREFIX} mkdir -pv "${DEBIAN_CHROOT}"/usr/local/bin
 fi
+PACMAN_CONF="${DEBIAN_CHROOT}/etc/pacman.conf"
+
+if [ -f "${PACMAN_CONF}" ]; then
+    # 1. 彻底清理旧的、错误的 sandbox 关键词
+    ${TMOE_CHROOT_PREFIX} sed -i '/DisableSandbox/d' "${PACMAN_CONF}"
+    
+    # 2. 在 [options] 后面精确插入正确的选项
+    # 注意：不要加 " = true"
+    ${TMOE_CHROOT_PREFIX} sed -i '/^\[options\]/a DisableSandbox' "${PACMAN_CONF}"
+    
+    # 3. 额外保险：如果你是用的 Proot 环境，有时需要禁用特定的检查
+    # 虽然 DisableSandbox 已经够了，但保持配置整洁最重要
+fi
+
 #cd ${DEBIAN_CHROOT}/usr/local/bin
 cd "${CONFIG_FOLDER}"
 if [[ -s neofetch ]]; then
@@ -978,12 +992,13 @@ if [[ -s neofetch ]]; then
 	esac
 fi
 [[ -e "neofetch" ]] || curl --connect-timeout 5 -Lo "neofetch" 'https://gcore.jsdelivr.net/gh/dylanaraps/neofetch@master/neofetch'
-[[ -e "neofetch" ]] || curl -Lo "neofetch" 'https://raw.githubusercontent.com/dylanaraps/neofetch/master/neofetch'
+[[ -e "neofetch" ]] || curl -Lo "neofetch" 'https://gitee.com/mirrors/neofetch/raw/master/neofetch'
 
 if [[ -e "debian-i" ]]; then
 	chmod 666 debian-i
 	rm -f debian-i
 fi
+
 
 get_patch() {
 	local patch_dir whiptail_file expected_sha256 chroot_patch_dir
@@ -1026,7 +1041,7 @@ ${TMOE_CHROOT_PREFIX} cp neofetch debian-i "${DEBIAN_CHROOT}"/usr/local/bin
 
 ${TMOE_CHROOT_PREFIX} chmod u+w -v "${DEBIAN_CHROOT}/root"
 if [ ! -s "zsh-i.sh" ]; then
-	curl -Lo zsh-i.sh 'https://raw.githubusercontent.com/2cd/zsh/2/2'
+	curl -Lo zsh-i.sh 'https://gitee.com/mo2/zsh/raw/2/2'
 fi
 #sed -i 's:#!/usr/bin/env bash:#!/usr/bin/env bash:' zsh-i.sh
 cp -f "${TMOE_SHARE_DIR}"/container/profile/configure_zsh ./zsh.sh
@@ -1079,7 +1094,7 @@ esac
 #dbus-daemon --system --fork 2>/dev/null;;
 #esac
 ############
-#curl -Lo '.profile' 'https://raw.githubusercontent.com/2moe/tmoe/master/profile.sh'
+#curl -Lo '.profile' 'https://gitee.com/mo2/linux/raw/master/profile.sh'
 #chmod u+x .profile
 
 # It was so confusing that I wanted to rewrite it.
@@ -1136,7 +1151,7 @@ cat >'.profile' <<-'ENDOFbashPROFILE'
 	fi
 	###############
 	unset TMOE_GITHUB
-	 TMOE_GITHUB=true
+	###tmoe-github TMOE_GITHUB=true
 	if ! grep -q "localhost" /etc/hosts 2>/dev/null; then
 	    cat >>/etc/hosts <<-EOF
 			127.0.0.1       localhost
@@ -1464,9 +1479,9 @@ cat >'.profile' <<-'ENDOFbashPROFILE'
 	fi
 	#################
 	unset TMOE_GITHUB
-	 TMOE_GITHUB=true
+	###tmoe-github TMOE_GITHUB=true
 	#勿删上面那条注释
-	 [[ -e /etc/apt/sources.list ]] && sed -i 's/^deb/# &/g;s/^##deb/deb/g' /etc/apt/sources.list 2>/dev/null
+	###tmoe-github [[ -e /etc/apt/sources.list ]] && sed -i 's/^deb/# &/g;s/^##deb/deb/g' /etc/apt/sources.list 2>/dev/null
 	##dns
 
 	regen_dns_conf() {
@@ -1474,9 +1489,9 @@ cat >'.profile' <<-'ENDOFbashPROFILE'
 
 	rm -f /etc/resolv.conf 2>/dev/null
 	cat >/etc/resolv.conf <<-'EndOfFile'
-		nameserver 1.0.0.1
+		nameserver 114.114.114.114
 		nameserver 114.114.115.115
-		nameserver 2606:4700:4700::1111
+		nameserver 240c::6666
 		nameserver 240c::6644
 		EndOfFile
 	if [[ -s /tmp/resolv.conf ]]; then
@@ -1781,7 +1796,7 @@ cat >'.profile' <<-'ENDOFbashPROFILE'
 	if [ -e "${TMOE_LOCALE_FILE}" ]; then
 	    TMOE_LANG=$(head -n 1 ${TMOE_LOCALE_FILE})
 	else
-	    TMOE_LANG="en_US.UTF-8"
+	    TMOE_LANG="zh_CN.UTF-8"
 	fi
 	TMOE_LANG_HALF=$(printf '%s\n' "${TMOE_LANG}" | cut -d '.' -f 1)
 	TMOE_LANG_QUATER=$(printf '%s\n' "${TMOE_LANG}" | cut -d '.' -f 1 | cut -d '_' -f 1)
@@ -1959,7 +1974,7 @@ cat >'.profile' <<-'ENDOFbashPROFILE'
 	}
 
 	if grep -q 'ubuntu' /etc/os-release; then
-	    if [ ! -e /usr/lib/locale/en_US ]; then
+	    if [ ! -e /usr/lib/locale/zh_CN ]; then
 	        printf "%s\n" "${GREEN}eatmydata apt ${YELLOW}install -y ${BLUE}locales-all${RESET}"
 	        eatmydata apt install -y locales-all 2>/dev/null || apt install -y locales-all 2>/dev/null
 	    fi
@@ -2098,18 +2113,18 @@ cat >'.profile' <<-'ENDOFbashPROFILE'
 	    mkdir -pv '/usr/portage'
 	    case ${TMOE_LANG} in
 	    zh_*UTF-8)
-	        grep -q 'en_US' /etc/locale.gen || printf "%s\n" \
-				"en_US.UTF-8 UTF-8" \
+	        grep -q 'zh_CN' /etc/locale.gen || printf "%s\n" \
+				"zh_CN.UTF-8 UTF-8" \
 				"en_US.UTF-8 UTF-8" \
 				>>/etc/locale.gen
 	        locale-gen
-	        GENTOOLOCALE="$(eselect locale list | grep 'en_US' | head -n 1 | cut -d '[' -f 2 | cut -d ']' -f 1)"
+	        GENTOOLOCALE="$(eselect locale list | grep 'zh_CN' | head -n 1 | cut -d '[' -f 2 | cut -d ']' -f 1)"
 	        eselect locale set "${GENTOOLOCALE}"
 	        printf '%s\n' \
 				'ACCEPT_LICENSE="*"' \
 				'MAKEOPTS="-j8"' \
 				'L10N="zh-CN en-US"' \
-				'LINGUAS="en_US zh_CN"' \
+				'LINGUAS="zh_CN en_US"' \
 				'PORTDIR="/usr/portage"' \
 				'DISTDIR="${PORTDIR}/distfiles"' \
 				'PKGDIR="${PORTDIR}/packages"' \
