@@ -113,7 +113,7 @@ cat >"${TMP_FILE}" <<-ENDOFTMOECHROOT
 	# TF_CARD_LINK的值为一个软链接文件
 	TF_CARD_LINK="${HOME}/storage/external-1"
 
-	MOUNT_TMP=false
+	MOUNT_TMP=true
 	TMP_SOURCE_DIR="${TMPDIR}"
 	TMP_MOUNT_POINT="/tmp"
 

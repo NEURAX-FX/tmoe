@@ -311,7 +311,7 @@ cat >"${TMOE_STARTUP_SCRIPT}" <<-ENDOFPROOT
 	GITSTATUS_DIR="${CONFIG_FOLDER}/gitstatus"
 	GITSTATUS_MOUNT_POINT="/root/.cache/gitstatus"
 
-	MOUNT_TMP=false
+	MOUNT_TMP=true
 	TMP_SOURCE_DIR="${TMPDIR}"
 	TMP_MOUNT_POINT="/tmp"
 
