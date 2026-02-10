@@ -384,24 +384,31 @@ cat >"${TMP_FILE}" <<-ENDOFTMOECHROOT
 	    # mount_src[1]="/data"
 	    # mount_dst[1]="/data"
 	    # mount_ro[1]=false
-	    for k in "\${!mount[@]}"; do
-	        local mount_bool=\${mount[\$k]}
-	        local mount_dst=\${mount_dst[\$k]}
-	        local mount_src=\${mount_src[\$k]}
-	        local mount_ro=\${mount_ro[\$k]}
-
-	        (\$(\$mount_bool)) || continue 
-
-	        (awk -v dst=\$mount_dst 'BEGIN { slash_len = split(dst, dst_arr, "/"); if (slash_len >= 4) exit 1}') || continue
-	        
-	        local dst_dir="\${ROOTFS_DIR}\$mount_dst"
-
-	        if ! detect_mount "\$dst_dir"; then
-	            mkdir_dst \$dst_dir
-	            mount_ro_or_rw \$mount_ro \$mount_src \$mount_dst
-	        fi
-
-	    done
+	    for k in "${!mount[@]}"; do
+        [[ "${mount[$k]}" == "true" ]] || continue
+    
+        src="${mount_src[$k]}"
+        dst="${mount_dst[$k]}"
+         ro="${mount_ro[$k]}"
+    
+       # A rough judgment
+       [[ -z "$src" || -z "$dst" ]] && continue
+    
+    target_path="${ROOTFS_DIR}${dst}"
+    
+    echo "--- Checking mount: $src -> $target_path ---"
+    
+    if ! detect_mount "$target_path"; then
+        # add looger
+        su -c "mkdir -p $target_path"
+        
+        if [[ "$ro" == "true" ]]; then
+            su -c "mount -o bind,ro $src $target_path"
+        else
+            su -c "mount -o bind $src $target_path"
+        fi
+    fi
+done
 	    ########
 	    if [[ \${FIX_DEV_LINK} = true ]]; then
 	        for i in /dev/fd /dev/stdin /dev/stout /dev/sterr /dev/tty0; do
